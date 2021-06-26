@@ -1,5 +1,6 @@
 const express = require('express');
 const morgan = require('morgan');
+const helmet = require('helmet');
 const path = require('path');
 require('dotenv').config( {path: path.resolve(__dirname, '../.env') });
 const mongoConnect = require('./db');
@@ -11,13 +12,19 @@ const app = express();
 mongoConnect();
 
 //requires
+const authMiddelware = require('./middelwares/authMiddleware');
 const users = require('./controllers/user');
+const auth = require('./controllers/auth');
+
+
 
 
 
 // Middelwares
 app.use(morgan('tiny'));
+app.use(helmet());
 app.use(express.json());
+app.use(authMiddelware.setUser);
 
 //Root route
 app.get('/', (req, res) => {
@@ -26,8 +33,10 @@ app.get('/', (req, res) => {
     });
 });
 
+app.use('/controllers/auth', auth);
+app.use('/controllers/users', users);
 
-//ls app.use('/api/users', users);
+
 
 function notFound(req, res, next) {
     res.status(404);
