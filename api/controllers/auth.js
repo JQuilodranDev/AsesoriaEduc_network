@@ -5,6 +5,10 @@ const User = require('../models/User');
 
 const router = express.Router();
 
+
+// @route GET /auth
+// @description get auth user data
+// @acess private
 router.get('/', (req, res, next) => {
     if(!req.get('authorization')){
         res.status(401);
@@ -18,7 +22,9 @@ router.get('/', (req, res, next) => {
     }
 });
 
-
+// @route post /auth
+// @description authenticate a user and get token
+// @access public
 router.post('/', async (req, res, next) => {
     try {
         const { email, password } = req.body;

@@ -123,4 +123,19 @@ router.patch('/:id', async (req, res, next) => {
 });
 
 
+// @route POST /controllers/users/id
+
+router.post('/:id', async (req, res) => {
+     const id = req.params.id;
+    
+     if(req.files) {
+         const file_path = req.files.image.path;
+         console.log(file_path);
+         const file_split = file_path.split('\\');
+     }
+
+})
+
+
+
 module.exports = router;
