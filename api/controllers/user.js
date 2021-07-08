@@ -14,7 +14,7 @@ router.post('/', async (req, res, next) => {
             lastName,
             email,
             password,
-            image,
+            avatar,
             role,
         } = req.body;
 
@@ -37,7 +37,7 @@ router.post('/', async (req, res, next) => {
             },
             email,
             password: hashedPassword,
-            image,
+            avatar,
             role: role ? role : 'student',
         });
 

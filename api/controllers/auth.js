@@ -2,6 +2,8 @@ const express = require('express');
 const bycrpt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const config = require('config');
+const { check, validationResult } = require('express-validator');
 
 const router = express.Router();
 
@@ -10,7 +12,7 @@ const router = express.Router();
 // @description get auth user data
 // @acess private
 router.get('/', (req, res, next) => {
-    if(!req.get('authorization')){
+    if(!req.get('x-auth-token')){
         res.status(401);
         const error = new Error('Credenciales invalidas');
         next(error);
@@ -24,56 +26,50 @@ router.get('/', (req, res, next) => {
 
 // @route post /auth
 // @description authenticate a user and get token
-// @access public
-router.post('/', async (req, res, next) => {
-    try {
-        const { email, password } = req.body;
+// @access private
+router.post('/', [
+    check('email', 'Porfavor ingresar un email valido')
+    .isEmail(),
+    check('password', 'La password es requerida')
+    .exists()
+], async (req, res) => {
+    const errors = validationResult(req);
+    if(!errors.isEmpty()){
+        return res.status(400).json({ errors: errors.array() });
+    }
 
-        const user = await User.findOne({ email });
+    const {email, password} = req.body
+    console.log(email);
+    try {
+        let user = await User.findOne({ email });
         if(!user) {
-            res.status(400);
-            throw new Error(
-                'Nombre de usuario y/o password incorrectos, intenta nuevamente',
-            );
+            return res.status(400).json({
+                errors: [{ msg: 'Credenciales invalidas'}]
+            });
         }
 
         const isMatch = await bycrpt.compare(password, user.password);
         if(!isMatch) {
-            res.status(400);
-            throw new Error(
-                'Nombre de usuario y/o password incorrectos, intenta nuevamente',
-            );
+            return res.status(400).json({
+                errors: [{ msg: 'Credenciales invalidas'}]
+            });
         }
 
         const payload = {
-            id: user._id,
-            name: `${user.name.nickName} ${user.name.firstName} ${user.name.lastName}`,
-            email: user.email,
-            role: user.role,
-        };
+            user: {
+                id: user.id
+            }
+        }
 
-        jwt.sign(
-            payload,
-            process.env.JWT_SECRET,
-            {
-                expiresIn: '1d',
-            },
-            (error, token) => {
-                if (error) {
-                    res.status(400);
-                    throw new Error(
-                        'Nombre de usuario y/o password, intenta nuevamente',
-                    );
-                }else {
-                    res.status(201);
-                    res.json({ token });
-                }
-            },
-        );
-
+        jwt.sign(payload, config.get('jwtSecret'), {
+            expiresIn: 360000
+        }, (error, token) => {
+            if(error) throw error;
+            res.json({ token });
+        });
     } catch (error) {
-            next(error);
+        console.error(error.message);
+        res.status(500).send('Server Error');
     }
 });
-
 module.exports = router;

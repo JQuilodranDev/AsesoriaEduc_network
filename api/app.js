@@ -3,7 +3,7 @@ const morgan = require('morgan');
 const helmet = require('helmet');
 const path = require('path');
 require('dotenv').config( {path: path.resolve(__dirname, '../.env') });
-const mongoConnect = require('./db');
+const mongoConnect = require('./config/db');
 
 // Init app
 const app = express();
@@ -15,6 +15,7 @@ mongoConnect();
 const authMiddelware = require('./middelwares/authMiddleware');
 const users = require('./controllers/user');
 const auth = require('./controllers/auth');
+const profile = require('./controllers/profile');
 
 
 
@@ -35,6 +36,7 @@ app.get('/', (req, res) => {
 
 app.use('/controllers/auth', auth);
 app.use('/controllers/users', users);
+app.use('/controllers/profile', profile);
 
 
 
